@@ -1,0 +1,136 @@
+<html>
+  <head>
+    <title>{{ title }} - microblog</title>
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<style>
+.x_axis path, .y_axis path {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1px;
+}
+</style>
+  </head>
+  <body>
+
+      <h1>Hello, {{ user.nickname }}!</h1>
+      <script>
+
+	var dataArray={{ data|tojson|safe }};
+
+    var max_x = Math.max.apply(Math,dataArray.map(function(d){return d.value;})) //225; // TODO: determine this from data
+
+	 console.log(dataArray)
+
+
+	 var width=800;
+	 var height=500;
+     var bar_height = 5;
+
+     var top_margin = 30;
+     var left_margin = 100;
+     var bottom_margin = 100;
+     var right_margin = 10;
+     var chart_width = width - left_margin;
+     var chart_height = height - bottom_margin;
+     var num_x_ticks = dataArray.length;
+     console.log(num_x_ticks)
+
+     var height_per_bar = (Math.floor(chart_height / (dataArray.length) + 2)); // total vertical space per bar
+
+
+    var x = d3.scale.ordinal().rangePoints([left_margin, chart_width + left_margin-right_margin]);
+    x.domain([0,max_x]);
+
+    var y = d3.scale.linear().range([chart_height, 0]);
+    y.domain([top_margin, chart_height]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .ticks(2)
+        //.tickFormat(d3.time.format(x_tick_format))
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .ticks(0)
+        //.tickFormat(d3.format('0s'))
+        .orient("left");
+
+
+	 var widthScale=d3.scale.linear()
+	 			.domain([0, max_x])
+	 			.range([left_margin, chart_width-right_margin]);
+
+	 var color=d3.scale.linear()
+	 			.domain([0,max_x])
+	 			.range(["red", "blue"]);
+
+	 var canvas=d3.select("body")
+	 		.append("svg")
+	 		.attr("width", width)
+	 		.attr("height", height);
+
+            // Draw the X axis
+            canvas.append('g')
+                .attr('class', 'x_axis')
+                .attr('transform', 'translate(0, ' + (top_margin + chart_height) + ')')
+                .call(xAxis).selectAll('text')
+                    .style("text-anchor", "end")
+                    .attr("dx", "-.8em")
+                    .attr("dy", "0.15em")
+                    .attr("transform", function(d) {
+                        return "rotate(-65)"
+                    });
+
+            // Draw the Y axis
+            canvas.append("g")
+                .attr("class", "y_axis")
+                .attr("transform", "translate(" + left_margin + ", " + top_margin + ")")
+                .attr("fill",  '#222222')
+                .call(yAxis);
+
+
+	 var bars=canvas.selectAll("rect")
+	 		.data(dataArray)
+	 		.enter()
+	 			.append("rect")
+		 			.attr("width", function(d) {return widthScale(d.value);})	
+		 			.attr("height", bar_height)
+		 			.attr("fill", function(d) {return color(d.value)})
+                    .attr("x", left_margin)
+		 			.attr("y", function(d, i) {
+                        return (i/1.1 * height_per_bar + top_margin);
+                    });
+
+	var labels = canvas.selectAll(".text")
+        .data(dataArray)
+        .enter()
+            .append("text")
+            .attr("class", "text")
+        // .attr('x', 200)
+        // .attr('y', 200)
+        // .attr('dy', 100)
+        // .attr('text', 'hello')
+        // .attr('text-anchor', 'end');
+
+
+	 	.attr("x", function(d) {
+            return left_margin - 10;
+            // return widthScale(d.value)
+        })
+	 	// .attr("y", function(d) {return -heightScale(d)})
+        .attr("y", function(d, i) {
+            return (i/1.1 * height_per_bar + top_margin) + (bar_height / 2) + 4;
+        })
+	 	.style("stroke-width", 6)
+	 	.style("text-anchor", "end")
+	 	.style("font-size", "20px")
+	 	.style("fill", "black")
+	 	.text(function(d) {
+            console.log(d.letter);
+            return d.letter;
+        });
+
+    </script>
+  </body>
+</html>
